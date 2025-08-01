@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  tax_code           String    @id @map("tax_code")
+  company_name       String    @map("company_name")
+  legal_representative String?   @map("legal_representative")
+  address            String?
+  province           String?
+  district           String?
+  ward               String?
+  industry_code      String?   @map("industry_code")
+  industry_name      String?   @map("industry_name")
+  charter_capital    BigInt?   @map("charter_capital")
+  establishment_date DateTime? @map("establishment_date")
+  business_status    String?   @map("business_status")
+  phone              String?
+  email              String?
+  website            String?
+  source_website     String?   @map("source_website")
+  created_at         DateTime  @default(now()) @map("created_at")
+  updated_at         DateTime  @updatedAt @map("updated_at")
+
+  @@map("companies")
+}
+
+model ScrapingJob {
+  job_id         String      @id @default(uuid()) @map("job_id")
+  job_type       String      @map("job_type")
+  parameters     Json?
+  status         String      @default("pending")
+  progress       Float       @default(0)
+  total_records  Int         @default(0) @map("total_records")
+  success_count  Int         @default(0) @map("success_count")
+  proxy_used     String?     @map("proxy_used")
+  captcha_solved Int         @default(0) @map("captcha_solved")
+  cost_tracking  Decimal     @default(0) @map("cost_tracking")
+  created_at     DateTime    @default(now()) @map("created_at")
+  completed_at   DateTime?   @map("completed_at")
+  error_logs     String?     @map("error_logs") // JSON string for array
+  user_id        String?     @map("user_id")
+  CaptchaLog     CaptchaLog[]
+
+  @@map("scraping_jobs")
+}
+
+model ProxyServer {
+  proxy_id        String   @id @default(uuid()) @map("proxy_id")
+  proxy_url       String   @unique @map("proxy_url")
+  proxy_type      String?  @map("proxy_type")
+  country         String?
+  status          String   @default("testing")
+  response_time   Int?     @map("response_time")
+  success_rate    Float    @default(0) @map("success_rate")
+  last_checked    DateTime? @map("last_checked")
+  cost_per_request Decimal  @default(0) @map("cost_per_request")
+  provider        String?
+  username        String?
+  password        String?
+  created_at      DateTime @default(now()) @map("created_at")
+  updated_at      DateTime @updatedAt @map("updated_at")
+
+  @@map("proxy_pool")
+}
+
+model CaptchaLog {
+  captcha_id     String      @id @default(uuid()) @map("captcha_id")
+  captcha_type   String      @map("captcha_type")
+  image_url      String?     @map("image_url")
+  solution       String?
+  solver_service String?     @map("solver_service")
+  cost           Decimal
+  solve_time     Int?        @map("solve_time")
+  success        Boolean
+  job_id         String?     @map("job_id")
+  job            ScrapingJob? @relation(fields: [job_id], references: [job_id])
+  created_at     DateTime    @default(now()) @map("created_at")
+
+  @@map("captcha_logs")
+}
+
+model AdminUser {
+  user_id   String   @id @map("user_id")
+  email     String   @unique
+  password  String
+  full_name String?  @map("full_name")
+  role      String
+  api_key   String?  @unique @map("api_key")
+  is_active Boolean  @default(true) @map("is_active")
+  created_at DateTime @default(now()) @map("created_at")
+  updated_at DateTime @updatedAt @map("updated_at")
+
+  @@map("admin_users")
+}
